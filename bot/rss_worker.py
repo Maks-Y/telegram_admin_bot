@@ -30,6 +30,10 @@ DEFAULT_INTERVAL_SEC = int(os.getenv("RSS_POLL_INTERVAL", "180"))
 MAX_ITEMS_PER_CYCLE = int(os.getenv("RSS_MAX_PER_CYCLE", "10"))  # <= 10 по требованию
 NOTIFY_PER_CYCLE = int(os.getenv("RSS_NOTIFY_PER_CYCLE", "3"))
 
+RSS_INCLUDE_LINK = os.getenv("RSS_INCLUDE_LINK", "1").lower() not in {
+    "0", "false", "no", "off"
+}
+
 TZ_NAME = os.getenv("TZ", "UTC")
 
 def _local_now() -> datetime:
@@ -147,12 +151,13 @@ async def _notify_admins(bot: Bot, draft_id: int, title: str):
 def _build_post_text(title: str, summary: str, url: str) -> str:
     title = _text_clean(title)
     summary = _text_clean(summary)
-    blocks = []
+    blocks: List[str] = []
     if title:
-        blocks.append(f"<b>{title}</b>")
+        blocks.append(title)
     if summary:
         blocks.append(summary)
-    blocks.append(url)
+    if RSS_INCLUDE_LINK and url:
+        blocks.append(url)
     return "\n\n".join([b for b in blocks if b])
 
 async def _try_extract_og_image(client: httpx.AsyncClient, url: str) -> Optional[str]:

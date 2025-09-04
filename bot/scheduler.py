@@ -5,11 +5,15 @@ from aiogram.types import (
     InlineKeyboardMarkup, InlineKeyboardButton
 )
 import logging
+import os
 from .db import fetchall, fetchone, execute, get_setting
 from .config import get_config
 
 cfg = get_config()
 log = logging.getLogger(__name__)
+RSS_INCLUDE_LINK = os.getenv("RSS_INCLUDE_LINK", "1").lower() not in {
+    "0", "false", "no", "off"
+}
 
 
 def get_channel_id() -> int | None:
@@ -67,6 +71,8 @@ def _trailing_values() -> tuple[str, str]:
 
 def _render_html(body: str) -> str:
     safe = _escape_html(body or "")
+    if not RSS_INCLUDE_LINK:
+        return safe
     url, text = _trailing_values()
     if url and text:
         safe = safe.replace(url, f'<a href="{url}">{text}</a>')
