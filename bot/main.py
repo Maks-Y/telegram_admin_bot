@@ -22,6 +22,7 @@ from .handlers import (
     schedule,
     publish_delete,
     queue,  # список/карточки запланированных: /queue, кнопки
+    _admin_menu_back,
 )
 
 
@@ -62,6 +63,7 @@ async def main():
     dp.include_router(drafts_archive.router)
     dp.include_router(queue.router)  # /queue и управление слотами
     dp.include_router(admin_panel.router)
+    dp.include_router(_admin_menu_back.router)
 
     # Планировщик публикаций по расписанию
     setup_scheduler(bot)
