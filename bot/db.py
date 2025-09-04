@@ -41,6 +41,7 @@ def init_db():
         if _table_exists(con, "feed_entries"):
             cols = _col_names(con, "feed_entries")
             if "hash" not in cols:
+                # используется в уникальном индексе uq_feed_entries_hash
                 try: con.execute("ALTER TABLE feed_entries ADD COLUMN hash TEXT")
                 except Exception: pass
 
