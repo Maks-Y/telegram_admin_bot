@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import hashlib
+import html
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta, timezone
 
@@ -64,8 +65,13 @@ def _parse_date(s: Optional[str]) -> Optional[datetime]:
 def _text_clean(s: str) -> str:
     if not s:
         return ""
-    # Уберем html-теги и лишние пробелы
+    # Уберем html-теги
     s = re.sub(r"<[^>]+>", "", s)
+    # Раскодируем HTML-сущности
+    s = html.unescape(s)
+    # Удалим &nbsp; и другие невидимые символы
+    s = re.sub(r"[\u00A0\u200B-\u200D\uFEFF]", " ", s)
+    # Сжимаем лишние пробелы
     s = re.sub(r"\s+", " ", s, flags=re.M).strip()
     return s
 
