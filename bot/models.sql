@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS drafts (
   media_file_id TEXT,                          -- для одиночных медиа
   album_json TEXT,                             -- JSON: [{type:'photo'|'video'|'document', file_id:'...'}]
   buttons_json TEXT,                           -- JSON: [{text:'...', url:'...'}]
+  hash TEXT,                                   -- уникальный хеш черновика
   status TEXT NOT NULL DEFAULT 'draft',        -- draft|queued|published|deleted
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   published_at TIMESTAMP
@@ -53,6 +54,7 @@ CREATE TABLE IF NOT EXISTS feed_entries (
   title TEXT,
   published_at TIMESTAMP,
   fetched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  hash TEXT,
   content_html TEXT,
   content_text TEXT,
   image_url TEXT,
@@ -86,6 +88,7 @@ CREATE TABLE IF NOT EXISTS published_msgs (
 
 CREATE INDEX IF NOT EXISTS idx_entries_feed ON feed_entries(feed_id, published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_drafts_status_created ON drafts(status, created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_drafts_hash ON drafts(hash);
 CREATE INDEX IF NOT EXISTS idx_draft_meta_simhash ON draft_meta(simhash);
 
 -- Уникальность по (feed_id, hash)

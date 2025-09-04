@@ -13,7 +13,7 @@ import httpx
 from aiogram import Bot
 from email.utils import parsedate_to_datetime
 
-from .db import fetchall, fetchone, execute
+from .db import fetchall, fetchone, execute, init_db
 
 log = logging.getLogger(__name__)
 
@@ -261,6 +261,7 @@ def setup_scheduler(scheduler, bot: Bot, interval_sec: Optional[int] = None):
 def setup_rss_worker(bot: Bot, interval_sec: int | None = None) -> AsyncIOScheduler:
     """Создаёт и запускает планировщик, выполняющий ``process_feeds_once``."""
 
+    init_db()
     scheduler = AsyncIOScheduler(timezone=TZ_NAME)
     setup_scheduler(scheduler, bot, interval_sec)
     scheduler.start()

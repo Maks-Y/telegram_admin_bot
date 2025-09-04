@@ -44,6 +44,12 @@ def init_db():
                 try: con.execute("ALTER TABLE feed_entries ADD COLUMN hash TEXT")
                 except Exception: pass
 
+        if _table_exists(con, "drafts"):
+            cols = _col_names(con, "drafts")
+            if "hash" not in cols:
+                try: con.execute("ALTER TABLE drafts ADD COLUMN hash TEXT")
+                except Exception: pass
+
         # ---- основная схема ----
         models_path = os.path.join(os.path.dirname(__file__), "models.sql")
         with open(models_path, "r", encoding="utf-8") as f:
