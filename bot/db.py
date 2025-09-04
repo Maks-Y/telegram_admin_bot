@@ -54,7 +54,7 @@ def execute(sql: str, params: tuple = ()):
     with closing(sqlite3.connect(DB_PATH)) as con:
         cur = con.execute(sql, params)
         con.commit()
-        return cur.rowcount
+        return cur
 
 def fetchone(sql: str, params: tuple = ()):
     with closing(sqlite3.connect(DB_PATH)) as con:
