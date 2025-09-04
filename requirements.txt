@@ -9,3 +9,4 @@ trafilatura>=1.7.0
 beautifulsoup4>=4.12.3
 sumy>=0.11.0
 simhash>=2.1.2
+openai>=1.3.0

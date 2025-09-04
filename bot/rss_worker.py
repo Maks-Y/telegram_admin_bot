@@ -13,7 +13,12 @@ import httpx
 from aiogram import Bot
 from email.utils import parsedate_to_datetime
 
-from .db import fetchall, fetchone, execute, init_db
+from .db import fetchall, fetchone, execute, init_db, get_setting
+
+try:
+    from openai import AsyncOpenAI
+except Exception:  # pragma: no cover - fallback if lib missing
+    AsyncOpenAI = None
 
 log = logging.getLogger(__name__)
 
@@ -155,6 +160,28 @@ def _build_post_text(title: str, summary: str, url: str) -> str:
     blocks.append(url)
     return "\n\n".join([b for b in blocks if b])
 
+
+async def _format_with_ai(text: str) -> str:
+    """Formats text via OpenAI using prompt from settings."""
+    prompt = (get_setting("AI_PROMPT") or "").strip()
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not prompt or not api_key or AsyncOpenAI is None:
+        return text
+    try:
+        client = AsyncOpenAI(api_key=api_key)
+        model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+        resp = await client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": text},
+            ],
+        )
+        return resp.choices[0].message.content.strip()
+    except Exception as e:
+        log.warning("AI format failed: %s", e)
+        return text
+
 async def _try_extract_og_image(client: httpx.AsyncClient, url: str) -> Optional[str]:
     html = await _http_get(client, url)
     if not html:
@@ -223,6 +250,7 @@ async def process_feeds_once(bot: Bot):
                     media_url = None
 
                 text = _build_post_text(title, summary, link)
+                text = await _format_with_ai(text)
                 draft_id = _insert_draft(text=text, media_url=media_url, source_url=link, hash_hex=it["hash"])
                 log.info("RSS draft #%s created from feed %s", draft_id, fid)
 

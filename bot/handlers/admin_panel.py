@@ -32,6 +32,7 @@ def _kb_admin_menu() -> InlineKeyboardMarkup:
     rows = [
         [InlineKeyboardButton(text="📰 RSS‑каналы", callback_data="admin:rss")],
         [InlineKeyboardButton(text="⚙️ Настройки",  callback_data="admin:settings")],
+        [InlineKeyboardButton(text="🧠 AI",        callback_data="admin:ai")],
         [InlineKeyboardButton(text="🗓 Очередь",    callback_data="admin:queue")],
         [InlineKeyboardButton(text="❓ Справка",    callback_data="admin:help")],
     ]
@@ -127,6 +128,51 @@ async def cb_rss_del(cb: CallbackQuery):
     execute("DELETE FROM feeds WHERE id=?", (fid,))
     await cb.message.edit_text("📰 RSS‑каналы", reply_markup=_kb_rss_list())
     await cb.answer()
+
+# AI settings
+class AISettingsStates(StatesGroup):
+    waiting_prompt = State()
+
+
+def _kb_ai_settings() -> InlineKeyboardMarkup:
+    prompt = (get_setting("AI_PROMPT") or "").strip()
+    short = prompt[:20] + ("…" if len(prompt) > 20 else "")
+    rows = [
+        [InlineKeyboardButton(text=f"Prompt: {short or '—'}", callback_data="ai:prompt")],
+        [InlineKeyboardButton(text="⬅️ В меню", callback_data="admin:menu")],
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+@router.callback_query(F.data == "admin:ai")
+async def cb_ai_home(cb: CallbackQuery):
+    if not _is_admin(cb.from_user.id):
+        await cb.answer("Нет доступа", show_alert=True); return
+    await cb.message.edit_text("🧠 AI", reply_markup=_kb_ai_settings())
+    await cb.answer()
+
+
+@router.callback_query(F.data == "ai:prompt")
+async def cb_ai_prompt(cb: CallbackQuery, state: FSMContext):
+    if not _is_admin(cb.from_user.id):
+        await cb.answer("Нет доступа", show_alert=True); return
+    await state.set_state(AISettingsStates.waiting_prompt)
+    await cb.message.answer("Введите промпт (или «—» для очистки).")
+    await cb.answer()
+
+
+@router.message(AISettingsStates.waiting_prompt)
+async def ai_receive_prompt(message: Message, state: FSMContext):
+    if not _is_admin(message.from_user.id):
+        await message.answer("Доступ запрещён."); return
+    text = (message.text or "").strip()
+    if text == "—":
+        execute("DELETE FROM settings WHERE key=?", ("AI_PROMPT",))
+        await message.answer("✅ Сброшено.")
+    else:
+        set_setting("AI_PROMPT", text)
+        await message.answer("✅ Сохранено.")
+    await state.clear()
 
 # Settings
 class SettingsStates(StatesGroup):
