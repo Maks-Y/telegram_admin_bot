@@ -1,7 +1,10 @@
 
 # Hotfix: обработчик "⬅️ В меню" из разделов админки
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from .menu import _is_admin  # или общий helper
+
+router = Router(name="_admin_menu_back")
 
 def _kb_root_menu() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
