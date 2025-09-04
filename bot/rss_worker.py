@@ -108,13 +108,12 @@ def _already_seen(hash_hex: str) -> bool:
     return bool(row)
 
 def _insert_draft(text: str, media_url: Optional[str], source_url: str, hash_hex: str) -> int:
-    execute(
+    cur = execute(
         "INSERT INTO drafts (text, media_url, status, created_at, source_url, hash) "
         "VALUES (?, ?, 'draft', datetime('now'), ?, ?)",
         (text, media_url, source_url, hash_hex),
     )
-    row = fetchone("SELECT last_insert_rowid()")
-    return int(row[0]) if row else 0
+    return int(cur.lastrowid) if cur else 0
 
 async def _notify_admins(bot: Bot, draft_id: int, title: str):
     # Пытаемся взять список админов из таблицы настроек, иначе из ENV ADMIN_ID(ы) через запятую
