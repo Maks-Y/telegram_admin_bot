@@ -101,12 +101,19 @@ def _extract_items(rss_xml: str) -> List[Dict[str, Any]]:
         guid = _xml_first(raw, "guid") or ""
         pubdate = _xml_first(raw, "pubDate") or _xml_first(raw, "published") or _xml_first(raw, "updated")
         description = _xml_first(raw, "description") or ""
+        media_url = None
+        for tag in ("enclosure", "media:content"):
+            m = re.search(rf"<{tag}[^>]+?(?:url|href)=['\"]([^'\"]+)['\"]", raw, re.I)
+            if m:
+                media_url = m.group(1).strip()
+                break
         items.append({
             "title": _text_clean(title),
             "link": link.strip(),
             "guid": guid.strip(),
             "pubdate": pubdate.strip() if pubdate else None,
             "summary": _text_clean(description),
+            "media_url": media_url,
             "raw": raw,
         })
     return items
@@ -216,11 +223,12 @@ async def process_feeds_once(bot: Bot):
                 summary = it.get("summary") or ""
 
                 # попытка вытащить обложку (без падений)
-                media_url = None
-                try:
-                    media_url = await _try_extract_og_image(client, link) if link else None
-                except Exception:
-                    media_url = None
+                media_url = it.get("media_url")
+                if not media_url:
+                    try:
+                        media_url = await _try_extract_og_image(client, link) if link else None
+                    except Exception:
+                        media_url = None
 
                 text = _build_post_text(title, summary, link)
                 draft_id = _insert_draft(text=text, media_url=media_url, source_url=link, hash_hex=it["hash"])
