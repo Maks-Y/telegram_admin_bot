@@ -117,18 +117,18 @@ def _insert_draft(text: str, media_url: Optional[str], source_url: str, hash_hex
     return int(row[0]) if row else 0
 
 async def _notify_admins(bot: Bot, draft_id: int, title: str):
-    # Пытаемся взять список админов из таблицы настроек, иначе из ENV ADMIN_ID(ы) через запятую
+    # Пытаемся взять список админов из таблицы настроек, иначе из ENV ADMIN_IDS через запятую
     admin_ids: List[int] = []
     try:
         rows = fetchall("SELECT value FROM settings WHERE key='admin_ids' LIMIT 1")
         if rows and rows[0] and rows[0][0]:
-            admin_ids = [int(x) for x in re.split(r"[;,:\s]+", rows[0][0]) if x.strip().isdigit()]
+            admin_ids = [int(x) for x in rows[0][0].replace(" ", "").split(",") if x]
     except Exception:
         pass
     if not admin_ids:
-        env_ids = os.getenv("ADMIN_ID", "")
+        env_ids = os.getenv("ADMIN_IDS", "")
         if env_ids:
-            admin_ids = [int(x) for x in re.split(r"[;,:\s]+", env_ids) if x.strip().isdigit()]
+            admin_ids = [int(x) for x in env_ids.replace(" ", "").split(",") if x]
 
     for uid in admin_ids[:3]:
         try:
