@@ -116,10 +116,11 @@ def _already_seen(hash_hex: str) -> bool:
     return bool(row)
 
 def _insert_draft(text: str, media_url: Optional[str], source_url: str, hash_hex: str) -> int:
+    content_type = "photo" if media_url else "text"
     cur = execute(
-        "INSERT INTO drafts (text, media_url, status, created_at, source_url, hash) "
-        "VALUES (?, ?, 'draft', datetime('now'), ?, ?)",
-        (text, media_url, source_url, hash_hex),
+        "INSERT INTO drafts (author_id, content_type, text, media_url, source_url, hash, status, created_at) "
+        "VALUES (0, ?, ?, ?, ?, ?, 'draft', datetime('now'))",
+        (content_type, text, media_url, source_url, hash_hex),
     )
     return int(cur.lastrowid) if cur else 0
 

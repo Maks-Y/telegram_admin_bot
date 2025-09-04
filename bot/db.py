@@ -50,6 +50,12 @@ def init_db():
             if "hash" not in cols:
                 try: con.execute("ALTER TABLE drafts ADD COLUMN hash TEXT")
                 except Exception: pass
+            if "media_url" not in cols:
+                try: con.execute("ALTER TABLE drafts ADD COLUMN media_url TEXT")
+                except Exception: pass
+            if "source_url" not in cols:
+                try: con.execute("ALTER TABLE drafts ADD COLUMN source_url TEXT")
+                except Exception: pass
 
         if _table_exists(con, "draft_meta"):
             cols = _col_names(con, "draft_meta")
