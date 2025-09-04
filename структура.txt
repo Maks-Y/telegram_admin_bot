@@ -1,0 +1,25 @@
+tg-publisher-bot/
+├─ bot/
+│  ├─ main.py
+│  ├─ config.py
+│  ├─ db.py
+│  ├─ scheduler.py
+│  ├─ keyboards.py
+│  ├─ models.sql
+│  ├─ utils/
+│  │   ├─ media_group_buffer.py
+│  │   └─ parse_dt.py
+│  └─ handlers/
+│      ├─ start.py
+│      ├─ channel_bind.py
+│      ├─ forwarded_to_draft.py
+│      ├─ edit_text.py
+│      ├─ edit_media.py
+│      ├─ edit_buttons.py
+│      ├─ schedule.py
+│      └─ publish_delete.py
+├─ Dockerfile
+├─ docker-compose.yml
+├─ requirements.txt
+├─ .env.example
+└─ README.md

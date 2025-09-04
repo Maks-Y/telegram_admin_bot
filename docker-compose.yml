@@ -1,0 +1,12 @@
+services:
+  bot:
+    build: .
+    env_file: .env
+    restart: unless-stopped
+    volumes:
+      - botdata:/app/data
+    environment:
+      - TZ=${TZ:-Europe/Berlin}
+
+volumes:
+  botdata:
