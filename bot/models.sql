@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS feed_entries (
   feed_id INTEGER NOT NULL,
   guid TEXT,
   url TEXT,
+  hash TEXT,
   title TEXT,
   published_at TIMESTAMP,
   fetched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
