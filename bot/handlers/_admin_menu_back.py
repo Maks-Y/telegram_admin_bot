@@ -10,10 +10,11 @@ def _kb_root_menu() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="📰 RSS‑каналы", callback_data="admin:rss"),
          InlineKeyboardButton(text="⚙️ Настройки",  callback_data="admin:settings")],
-        [InlineKeyboardButton(text="🗓 Очередь", callback_data="menu:queue"),
-         InlineKeyboardButton(text="📄 Черновики", callback_data="menu:drafts")],
-        [InlineKeyboardButton(text="🗂 Архив", callback_data="menu:archive"),
-         InlineKeyboardButton(text="❓ Справка", callback_data="admin:help")]
+        [InlineKeyboardButton(text="🧠 AI", callback_data="admin:ai"),
+         InlineKeyboardButton(text="🗓 Очередь", callback_data="menu:queue")],
+        [InlineKeyboardButton(text="📄 Черновики", callback_data="menu:drafts"),
+         InlineKeyboardButton(text="🗂 Архив", callback_data="menu:archive")],
+        [InlineKeyboardButton(text="❓ Справка", callback_data="admin:help")]
     ])
 
 @router.callback_query(F.data == "admin:menu")
