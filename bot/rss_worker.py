@@ -7,6 +7,8 @@ import hashlib
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta, timezone
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
 import httpx
 from aiogram import Bot
 from email.utils import parsedate_to_datetime
@@ -14,6 +16,12 @@ from email.utils import parsedate_to_datetime
 from .db import fetchall, fetchone, execute
 
 log = logging.getLogger(__name__)
+
+__all__ = [
+    "process_feeds_once",
+    "setup_scheduler",
+    "setup_rss_worker",
+]
 
 # ------------------------
 # Настройки
@@ -248,3 +256,12 @@ def setup_scheduler(scheduler, bot: Bot, interval_sec: Optional[int] = None):
             log.exception("RSS tick error: %s", e)
 
     scheduler.add_job(tick, trigger=IntervalTrigger(seconds=sec), id="rss_tick", replace_existing=True)
+
+
+def setup_rss_worker(bot: Bot, interval_sec: int | None = None) -> AsyncIOScheduler:
+    """Создаёт и запускает планировщик, выполняющий ``process_feeds_once``."""
+
+    scheduler = AsyncIOScheduler(timezone=TZ_NAME)
+    setup_scheduler(scheduler, bot, interval_sec)
+    scheduler.start()
+    return scheduler
