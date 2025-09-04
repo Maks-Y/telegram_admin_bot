@@ -104,14 +104,14 @@ async def _publish(bot: Bot, draft_id: int, channel_id: int | None):
     import json
     row = fetchone(
         "SELECT content_type, text, parse_mode, disable_web_page_preview, silent, "
-        "media_file_id, album_json, buttons_json "
+        "media_file_id, media_url, album_json, buttons_json "
         "FROM drafts WHERE id=?",
         (draft_id,)
     )
     if not row:
         return False
 
-    content_type, text, _parse_mode, disable_preview, silent, media_file_id, album_json, buttons_json = row
+    content_type, text, _parse_mode, disable_preview, silent, media_file_id, media_url, album_json, buttons_json = row
     chat_id = channel_id
     kb = _build_keyboard(buttons_json)
     html = _render_html(text or "")
@@ -129,16 +129,17 @@ async def _publish(bot: Bot, draft_id: int, channel_id: int | None):
     # Одиночное медиа
     elif content_type in ("photo", "video", "document"):
         cap = html if len(html) <= 1024 else None
+        file_ref = media_file_id or media_url
         if content_type == "photo":
-            await bot.send_photo(chat_id, media_file_id, caption=cap,
+            await bot.send_photo(chat_id, file_ref, caption=cap,
                                  disable_notification=bool(silent), reply_markup=kb if cap else None,
                                  parse_mode="HTML" if cap else None)
         elif content_type == "video":
-            await bot.send_video(chat_id, media_file_id, caption=cap,
+            await bot.send_video(chat_id, file_ref, caption=cap,
                                  disable_notification=bool(silent), reply_markup=kb if cap else None,
                                  parse_mode="HTML" if cap else None)
         else:
-            await bot.send_document(chat_id, media_file_id, caption=cap,
+            await bot.send_document(chat_id, file_ref, caption=cap,
                                     disable_notification=bool(silent), reply_markup=kb if cap else None,
                                     parse_mode="HTML" if cap else None)
         if not cap:

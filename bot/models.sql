@@ -16,8 +16,10 @@ CREATE TABLE IF NOT EXISTS drafts (
   disable_web_page_preview INTEGER DEFAULT 1,  -- 1:true / 0:false
   silent INTEGER DEFAULT 0,                    -- 1:true / 0:false
   media_file_id TEXT,                          -- для одиночных медиа
+  media_url TEXT,                              -- исходный URL медиа (если нет file_id)
   album_json TEXT,                             -- JSON: [{type:'photo'|'video'|'document', file_id:'...'}]
   buttons_json TEXT,                           -- JSON: [{text:'...', url:'...'}]
+  source_url TEXT,                             -- ссылка на оригинал (для RSS)
   hash TEXT,                                   -- уникальный хеш черновика
   status TEXT NOT NULL DEFAULT 'draft',        -- draft|queued|published|deleted
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -55,7 +57,6 @@ CREATE TABLE IF NOT EXISTS feed_entries (
   title TEXT,
   published_at TIMESTAMP,
   fetched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  hash TEXT,
   content_html TEXT,
   content_text TEXT,
   image_url TEXT,
