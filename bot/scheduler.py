@@ -59,13 +59,21 @@ async def publish_now(bot: Bot, draft_id: int) -> bool:
 def _escape_html(s: str) -> str:
     return (s or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
+def _trailing_values() -> tuple[str, str]:
+    """Получить хвост ссылки и текст из настроек."""
+    url = (get_setting("TRAILING_URL") or "").strip()
+    text = (get_setting("TRAILING_TEXT") or "").strip()
+    return url, text
+
 def _render_html(body: str) -> str:
     safe = _escape_html(body or "")
-    safe = safe.replace(TRAILING_URL, f'<a href="{TRAILING_URL}">{TRAILING_TEXT}</a>')
-    if f'href="{TRAILING_URL}"' not in safe:
-        if safe.strip():
-            safe += "\n\n"
-        safe += f'<a href="{TRAILING_URL}">{TRAILING_TEXT}</a>'
+    url, text = _trailing_values()
+    if url and text:
+        safe = safe.replace(url, f'<a href="{url}">{text}</a>')
+        if f'href="{url}"' not in safe:
+            if safe.strip():
+                safe += "\n\n"
+            safe += f'<a href="{url}">{text}</a>'
     return safe
 
 def _build_keyboard(buttons_json: str | None) -> InlineKeyboardMarkup | None:
