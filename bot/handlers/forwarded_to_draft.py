@@ -1,4 +1,5 @@
 import json
+import os
 from aiogram import Router, F
 from aiogram.types import Message, ContentType
 from ..db import execute, fetchone, get_setting
@@ -9,6 +10,9 @@ from ..utils.media_group_buffer import MediaGroupBuffer
 router = Router()
 cfg = get_config()
 buffer = MediaGroupBuffer()
+RSS_INCLUDE_LINK = os.getenv("RSS_INCLUDE_LINK", "1").lower() not in {
+    "0", "false", "no", "off"
+}
 
 def _is_admin(uid: int) -> bool:
     return (not cfg.admin_ids) or (uid in cfg.admin_ids)
@@ -27,6 +31,8 @@ def _trailing_values() -> tuple[str, str]:
 def _render_html(body: str) -> str:
     """Экранируем HTML и делаем красивую ссылку без превью."""
     safe = _escape_html(body or "")
+    if not RSS_INCLUDE_LINK:
+        return safe
     url, text = _trailing_values()
     if url and text:
         safe = safe.replace(url, f'<a href="{url}">{text}</a>')
