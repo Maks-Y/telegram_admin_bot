@@ -51,6 +51,15 @@ def init_db():
                 try: con.execute("ALTER TABLE drafts ADD COLUMN hash TEXT")
                 except Exception: pass
 
+        if _table_exists(con, "draft_meta"):
+            cols = _col_names(con, "draft_meta")
+            if "hash" not in cols:
+                try: con.execute("ALTER TABLE draft_meta ADD COLUMN hash TEXT")
+                except Exception: pass
+            if "media_url" not in cols:
+                try: con.execute("ALTER TABLE draft_meta ADD COLUMN media_url TEXT")
+                except Exception: pass
+
         # ---- основная схема ----
         models_path = os.path.join(os.path.dirname(__file__), "models.sql")
         with open(models_path, "r", encoding="utf-8") as f:
