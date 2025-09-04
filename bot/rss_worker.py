@@ -112,16 +112,23 @@ def _extract_items(rss_xml: str) -> List[Dict[str, Any]]:
     return items
 
 def _already_seen(hash_hex: str) -> bool:
-    row = fetchone("SELECT 1 FROM drafts WHERE hash = ? LIMIT 1", (hash_hex,))
+    row = fetchone("SELECT 1 FROM draft_meta WHERE hash = ? LIMIT 1", (hash_hex,))
     return bool(row)
 
-def _insert_draft(text: str, media_url: Optional[str], source_url: str, hash_hex: str) -> int:
+def _insert_draft(feed_id: int, text: str, media_url: Optional[str], source_url: str, hash_hex: str) -> int:
     cur = execute(
-        "INSERT INTO drafts (text, media_url, status, created_at, source_url, hash) "
-        "VALUES (?, ?, 'draft', datetime('now'), ?, ?)",
-        (text, media_url, source_url, hash_hex),
+        "INSERT INTO drafts(author_id, content_type, text, parse_mode, status) "
+        "VALUES (0, 'text', ?, 'HTML', 'draft')",
+        (text,),
     )
-    return int(cur.lastrowid) if cur else 0
+    draft_id = int(cur.lastrowid) if cur else 0
+    if draft_id:
+        execute(
+            "INSERT INTO draft_meta(draft_id, origin, feed_id, source_url, media_url, hash) "
+            "VALUES (?, 'rss_ai', ?, ?, ?, ?)",
+            (draft_id, feed_id, source_url, media_url, hash_hex),
+        )
+    return draft_id
 
 async def _notify_admins(bot: Bot, draft_id: int, title: str):
     # Пытаемся взять список админов из таблицы настроек, иначе из ENV ADMIN_IDS через запятую
@@ -222,7 +229,7 @@ async def process_feeds_once(bot: Bot):
                     media_url = None
 
                 text = _build_post_text(title, summary, link)
-                draft_id = _insert_draft(text=text, media_url=media_url, source_url=link, hash_hex=it["hash"])
+                draft_id = _insert_draft(feed_id=fid, text=text, media_url=media_url, source_url=link, hash_hex=it["hash"])
                 log.info("RSS draft #%s created from feed %s", draft_id, fid)
 
                 if notif_left > 0:

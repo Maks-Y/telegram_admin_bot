@@ -66,6 +66,8 @@ CREATE TABLE IF NOT EXISTS draft_meta (
   feed_id INTEGER,
   entry_id INTEGER,
   source_url TEXT,
+  media_url TEXT,
+  hash TEXT,
   simhash INTEGER,
   ai_model TEXT,
   ai_version TEXT,
