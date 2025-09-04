@@ -4,10 +4,12 @@ from aiogram.types import (
     InputMediaPhoto, InputMediaVideo, InputMediaDocument,
     InlineKeyboardMarkup, InlineKeyboardButton
 )
+import logging
 from .db import fetchall, fetchone, execute, get_setting
 from .config import get_config
 
 cfg = get_config()
+log = logging.getLogger(__name__)
 
 
 def get_channel_id() -> int | None:
@@ -21,6 +23,10 @@ def setup_scheduler(bot: Bot) -> AsyncIOScheduler:
     sched = AsyncIOScheduler(timezone=cfg.timezone)
 
     async def tick():
+        channel_id = get_channel_id()
+        if channel_id is None:
+            log.error("No channel_id configured; skipping scheduled publish")
+            return
         rows = fetchall(
             "SELECT id, draft_id, run_at "
             "FROM schedules "
@@ -32,7 +38,7 @@ def setup_scheduler(bot: Bot) -> AsyncIOScheduler:
         for sid, draft_id, _ in rows:
             try:
                 execute("UPDATE schedules SET status='running' WHERE id=? AND status='pending'", (sid,))
-                ok = await _publish(bot, draft_id, get_channel_id())
+                ok = await _publish(bot, draft_id, channel_id)
                 execute("UPDATE schedules SET status=? WHERE id=?", ("done" if ok else "canceled", sid))
             except Exception:
                 execute("UPDATE schedules SET status='canceled' WHERE id=?", (sid,))
@@ -43,7 +49,11 @@ def setup_scheduler(bot: Bot) -> AsyncIOScheduler:
 
 async def publish_now(bot: Bot, draft_id: int) -> bool:
     """Быстрая публикация — не трогаем слоты."""
-    return await _publish(bot, draft_id, get_channel_id())
+    channel_id = get_channel_id()
+    if channel_id is None:
+        log.error("No channel_id configured; skipping immediate publish of draft %s", draft_id)
+        return False
+    return await _publish(bot, draft_id, channel_id)
 
 # ------------ helpers ------------
 def _escape_html(s: str) -> str:
@@ -81,6 +91,8 @@ def _build_keyboard(buttons_json: str | None) -> InlineKeyboardMarkup | None:
 
 # ------------ publish ------------
 async def _publish(bot: Bot, draft_id: int, channel_id: int | None):
+    if channel_id is None:
+        return False
     import json
     row = fetchone(
         "SELECT content_type, text, parse_mode, disable_web_page_preview, silent, "
